@@ -25,7 +25,7 @@ Add this module to your Viam robot's configuration:
     {
       "name": "webcam-discovery",
       "api": "rdk:service:discovery", 
-      "model": "rand:find-webcams:webcam-discovery",
+      "model": "viam:find-webcams:webcam-discovery",
       "attributes" : {}
     }
   ]
@@ -33,7 +33,7 @@ Add this module to your Viam robot's configuration:
   "modules": [
     {
       "name": "find-webcams",
-      "module_id": "rand:find-webcams",
+      "module_id": "viam:find-webcams",
       "type": "registry"
     }
   ]
