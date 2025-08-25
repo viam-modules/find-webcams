@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -153,7 +154,7 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 			// Create unique name for each property option
 			name := fixName(driverInfo.Name)
 			if len(props) > 1 {
-				name = name + string(rune('a'+i))
+				name = name + "-" + fmt.Sprintf("%d", i)
 			}
 
 			wc := resource.Config{
