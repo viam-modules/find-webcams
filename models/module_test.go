@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"go.viam.com/rdk/logging"
@@ -33,11 +34,21 @@ func newFakeDriver(label string, props []prop.Media) driver.Driver {
 }
 
 func testGetDrivers() []driver.Driver {
-	props := prop.Media{
-		Video:    prop.Video{Width: 320, Height: 240, FrameFormat: "some format", FrameRate: 30.0},
-		DeviceID: "some_device_id;",
+	props := []prop.Media{
+		{
+			Video:    prop.Video{Width: 1920, Height: 1080, FrameFormat: "MJPEG", FrameRate: 30.0},
+			DeviceID: "some_device_id;",
+		},
+		{
+			Video:    prop.Video{Width: 1280, Height: 720, FrameFormat: "MJPEG", FrameRate: 60.0},
+			DeviceID: "some_device_id;",
+		},
+		{
+			Video:    prop.Video{Width: 640, Height: 480, FrameFormat: "YUYV", FrameRate: 30.0},
+			DeviceID: "some_device_id;",
+		},
 	}
-	withProps := newFakeDriver("some_label", []prop.Media{props})
+	withProps := newFakeDriver("some_label", props)
 	withoutProps := newFakeDriver("another label", []prop.Media{})
 	return []driver.Driver{withProps, withoutProps}
 }
@@ -47,18 +58,36 @@ func TestDiscoveryWebcam(t *testing.T) {
 	resp, err := findCameras(context.Background(), testGetDrivers, logger)
 
 	test.That(t, err, test.ShouldBeNil)
-	test.That(t, resp, test.ShouldHaveLength, 1)
-	test.That(t, resp[0].API, test.ShouldResemble, camera.API)
-	test.That(t, resp[0].Name, test.ShouldResemble, fixName(someName))
+	test.That(t, resp, test.ShouldHaveLength, 3)
 
-	cfg, ok := resp[0].ConvertedAttributes.(videosource.WebcamConfig)
-	test.That(t, ok, test.ShouldBeTrue)
+	for i, config := range resp {
+		test.That(t, config.API, test.ShouldResemble, camera.API)
+		test.That(t, config.Model, test.ShouldResemble, videosource.ModelWebcam)
 
-	test.That(t, cfg, test.ShouldHaveSameTypeAs, videosource.WebcamConfig{})
+		// Names should be unique with index suffix
+		expectedName := fixName(someName) + "-" + fmt.Sprintf("%d", i)
+		test.That(t, config.Name, test.ShouldEqual, expectedName)
 
-	// these will need to be adde dback when the cfg popualtes them again
-	test.That(t, cfg.Width, test.ShouldEqual, 0)
-	test.That(t, cfg.Height, test.ShouldEqual, 0)
-	test.That(t, cfg.Format, test.ShouldResemble, "")
-	test.That(t, cfg.FrameRate, test.ShouldEqual, 0)
+		cfg, ok := config.ConvertedAttributes.(videosource.WebcamConfig)
+		test.That(t, ok, test.ShouldBeTrue)
+		test.That(t, cfg, test.ShouldHaveSameTypeAs, videosource.WebcamConfig{})
+	}
+
+	cfg0, _ := resp[0].ConvertedAttributes.(videosource.WebcamConfig)
+	test.That(t, cfg0.Width, test.ShouldEqual, 1920)
+	test.That(t, cfg0.Height, test.ShouldEqual, 1080)
+	test.That(t, cfg0.Format, test.ShouldEqual, "MJPEG")
+	test.That(t, cfg0.FrameRate, test.ShouldEqual, 30.0)
+
+	cfg1, _ := resp[1].ConvertedAttributes.(videosource.WebcamConfig)
+	test.That(t, cfg1.Width, test.ShouldEqual, 1280)
+	test.That(t, cfg1.Height, test.ShouldEqual, 720)
+	test.That(t, cfg1.Format, test.ShouldEqual, "MJPEG")
+	test.That(t, cfg1.FrameRate, test.ShouldEqual, 60.0)
+
+	cfg2, _ := resp[2].ConvertedAttributes.(videosource.WebcamConfig)
+	test.That(t, cfg2.Width, test.ShouldEqual, 640)
+	test.That(t, cfg2.Height, test.ShouldEqual, 480)
+	test.That(t, cfg2.Format, test.ShouldEqual, "YUYV")
+	test.That(t, cfg2.FrameRate, test.ShouldEqual, 30.0)
 }
