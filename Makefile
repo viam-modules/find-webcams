@@ -20,7 +20,7 @@ module.tar.gz: build
 	tar czf $(BIN_OUTPUT_PATH)/module.tar.gz $(BIN_OUTPUT_PATH)/find-webcams meta.json
 
 setup: 
-	if [ "$(SOURCE_ARCH)" = "linux" ]; then \
+	if [ "$(SOURCE_OS)" = "linux" ]; then \
 		sudo apt-get install -y apt-utils coreutils tar libnlopt-dev libjpeg-dev pkg-config; \
 	fi
 	# remove unused imports
