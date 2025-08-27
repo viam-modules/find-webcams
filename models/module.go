@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -127,49 +128,45 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 		}
 
 		logger.Debugf("found camera drivers with info  %#v", driverInfo)
+		logger.Debugf("found %d properties for driver %s", len(props), driverInfo.Name)
 
-		// Find the property with maximum resolution
-		maxResolution := 0
-		maxResProp := props[0]
-		for _, p := range props {
-			resolution := p.Video.Width * p.Video.Height
-			if resolution > maxResolution {
-				maxResolution = resolution
-				maxResProp = p
+		// Create a webcam resource config for every property option
+		for i, p := range props {
+			logger.Debugf("property %d: %dx%d @ %dfps, format: %s",
+				i, p.Video.Width, p.Video.Height, p.Video.FrameRate, p.Video.FrameFormat)
+			var result map[string]interface{}
+			attributes := videosource.WebcamConfig{
+				Path:      label,
+				Format:    string(p.Video.FrameFormat),
+				Width:     p.Video.Width,
+				Height:    p.Video.Height,
+				FrameRate: p.Video.FrameRate,
 			}
+
+			jsonBytes, err := json.Marshal(attributes)
+			if err != nil {
+				return nil, err
+			}
+			if err = json.Unmarshal(jsonBytes, &result); err != nil {
+				return nil, err
+			}
+
+			// Create unique name for each property option
+			name := fixName(driverInfo.Name)
+			if len(props) > 1 {
+				name = name + "-" + fmt.Sprintf("%d", i)
+			}
+
+			wc := resource.Config{
+				Name:                name,
+				API:                 camera.API,
+				Model:               videosource.ModelWebcam,
+				Attributes:          result,
+				ConvertedAttributes: attributes,
+			}
+
+			webcams = append(webcams, wc)
 		}
-
-		var result map[string]interface{}
-		attributes := videosource.WebcamConfig{
-			Path:      label,
-			Format:    string(maxResProp.Video.FrameFormat),
-			Width:     maxResProp.Video.Width,
-			Height:    maxResProp.Video.Height,
-			FrameRate: maxResProp.Video.FrameRate,
-		}
-
-		// marshal to bytes
-		jsonBytes, err := json.Marshal(attributes)
-		if err != nil {
-			return nil, err
-		}
-
-		// convert to map to be used as attributes in resource.Config
-		if err = json.Unmarshal(jsonBytes, &result); err != nil {
-			return nil, err
-		}
-
-		name := fixName(driverInfo.Name)
-
-		wc := resource.Config{
-			Name:                name,
-			API:                 camera.API,
-			Model:               videosource.ModelWebcam,
-			Attributes:          result,
-			ConvertedAttributes: attributes,
-		}
-
-		webcams = append(webcams, wc)
 	}
 
 	return webcams, nil
