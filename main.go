@@ -6,7 +6,6 @@ import (
 	"runtime"
 
 	mdcam "github.com/pion/mediadevices/pkg/driver/camera"
-	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/logging"
 	"go.viam.com/rdk/module"
 	"go.viam.com/rdk/resource"
@@ -32,10 +31,6 @@ func main() {
 		resource.APIModel{
 			API:   discovery.API,
 			Model: models.WebcamDiscovery,
-		},
-		resource.APIModel{
-			API:   camera.API,
-			Model: models.ModelWebcam,
 		},
 	)
 }
