@@ -85,6 +85,12 @@ func fixName(name string) string {
 // Discover webcam attributes.
 func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger logging.Logger) ([]resource.Config, error) {
 	if runtime.GOOS == "linux" {
+		// Clear all registered camera devices before calling Initialize to prevent duplicates.
+		// If first initalize call, this will be a noop.
+		manager := driver.GetManager()
+		for _, d := range manager.Query(driver.FilterVideoRecorder()) {
+			manager.Delete(d.ID())
+		}
 		// TODO(RSDK-12789): Separate discover() calls from Initialize() calls.
 		// So we can call Initialize() only once, and call discover() as many times as we need.
 		mdcam.Initialize()
