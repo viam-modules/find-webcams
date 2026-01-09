@@ -17,7 +17,9 @@ build: format update-rdk
 
 module.tar.gz: build
 	rm -f bin/module.tar.gz
-	tar czf bin/module.tar.gz $(BIN_OUTPUT_PATH)/find-webcams meta.json
+	cp $(BIN_OUTPUT_PATH)/find-webcams bin/find-webcams
+	tar czf bin/module.tar.gz bin/find-webcams meta.json
+	rm bin/find-webcams
 
 setup:
 	if [ "$(SOURCE_OS)" = "linux" ]; then \
