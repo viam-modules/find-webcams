@@ -16,7 +16,7 @@ build: format update-rdk
 	go build $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/find-webcams main.go
 
 module.tar.gz: build
-	rm -f $(BIN_OUTPUT_PATH)/module.tar.gz
+	rm -f bin/module.tar.gz
 	tar czf bin/module.tar.gz $(BIN_OUTPUT_PATH)/find-webcams meta.json
 
 setup:
@@ -29,7 +29,7 @@ setup:
 
 
 clean:
-	rm -rf $(BIN_OUTPUT_PATH)/find-webcams $(BIN_OUTPUT_PATH)/module.tar.gz find-webcams
+	rm -rf $(BIN_OUTPUT_PATH)/find-webcams bin/module.tar.gz find-webcams
 
 format:
 	gofmt -w -s .
