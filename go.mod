@@ -4,7 +4,7 @@ go 1.25.1
 
 require (
 	github.com/pion/mediadevices v0.9.0
-	go.viam.com/rdk v0.108.0
+	go.viam.com/rdk v0.108.3
 	go.viam.com/test v1.2.4
 )
 
