@@ -1,22 +1,21 @@
-# Build module for all platforms without publishing
+name: Build Test
+
 on:
-  pull_request:
+  pull_request_target:
   push:
     branches:
       - main
 
 jobs:
   build:
-    name: Build module
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Build
-        uses: viamrobotics/build-action@v1.4
+      - uses: actions/checkout@v4
         with:
-          version: ""  # empty version triggers build-only, no publish
-          ref: ${{ github.sha }}
-          key-id: ${{ secrets.viam_dev_api_key_id }}
-          key-value: ${{ secrets.viam_dev_api_key }}
-          token: ${{ github.token }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: viamrobotics/build-action@v1.4
+        with:
+          version: ""  # Empty = build only, no deploy
+          key-id: ${{ secrets.VIAM_DEV_API_KEY_ID }}
+          key-value: ${{ secrets.VIAM_DEV_API_KEY }}
