@@ -8,18 +8,30 @@ SOURCE_ARCH := $(call normalize_arch,$(SOURCE_ARCH))
 TARGET_ARCH := $(call normalize_arch,$(TARGET_ARCH))
 TOOL_BIN = bin/gotools/$(shell uname -s)-$(shell uname -m)
 BIN_OUTPUT_PATH = bin/$(TARGET_OS)-$(TARGET_ARCH)
-GOPATH = $(HOME)/go/bin
-export PATH := ${PATH}:$(GOPATH) 
+export PATH := ${PATH}:$(shell go env GOPATH)/bin
+export GOPRIVATE := github.com/hexbabe/sean-mediadevices
+MODULE_BINARY = find-webcams
+
+# Set cross-compilation environment based on TARGET_OS
+GO_BUILD_ENV :=
+ifeq ($(TARGET_OS),windows)
+	GO_BUILD_ENV += GOOS=windows GOARCH=$(TARGET_ARCH)
+	MODULE_BINARY = find-webcams.exe
+else ifeq ($(TARGET_OS),linux)
+	GO_BUILD_ENV += GOOS=linux GOARCH=$(TARGET_ARCH)
+else ifeq ($(TARGET_OS),darwin)
+	GO_BUILD_ENV += GOOS=darwin GOARCH=$(TARGET_ARCH)
+endif
 
 build: format update-rdk
-	rm -f $(BIN_OUTPUT_PATH)/find-webcams
-	go build $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/find-webcams main.go
+	rm -f $(BIN_OUTPUT_PATH)/$(MODULE_BINARY)
+	$(GO_BUILD_ENV) CGO_ENABLED=1 go build $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) main.go
 
 module.tar.gz: build
 	rm -f bin/module.tar.gz
-	cp $(BIN_OUTPUT_PATH)/find-webcams bin/find-webcams
-	tar czf bin/module.tar.gz bin/find-webcams meta.json
-	rm bin/find-webcams
+	cp $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) bin/$(MODULE_BINARY)
+	tar czf bin/module.tar.gz bin/$(MODULE_BINARY) meta.json
+	rm bin/$(MODULE_BINARY)
 
 setup:
 	if [ "$(SOURCE_OS)" = "linux" ]; then \
@@ -27,7 +39,7 @@ setup:
 	fi
 	# remove unused imports
 	go install golang.org/x/tools/cmd/goimports@latest
-	find . -name '*.go' -exec $(GOPATH)/goimports -w {} +
+	find . -name '*.go' -exec sh -c '"$$(go env GOPATH)/bin/goimports" -w "$$1"' _ {} \;
 
 
 clean:
