@@ -84,7 +84,7 @@ func fixName(name string) string {
 
 // Discover webcam attributes.
 func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger logging.Logger) ([]resource.Config, error) {
-	if runtime.GOOS == "linux" {
+	if runtime.GOOS == "linux" || runtime.GOOS == "windows" {
 		// Clear all registered camera devices before calling Initialize to prevent duplicates.
 		// If first initalize call, this will be a noop.
 		manager := driver.GetManager()
@@ -123,11 +123,10 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 
 		labelParts := strings.Split(driverInfo.Label, mdcam.LabelSeparator)
 
-		// for mac, the device path is the first part of the label
+		// For macOS and Windows: Label is a single identifier (no separator)
+		// For Linux: Label is "name;devicePath" so we need the second part (devicePath)
 		label := labelParts[0]
 		if len(labelParts) > 1 {
-			// for linux, the device path that works is the second part of the label
-			// unknown why
 			label = labelParts[1]
 		}
 
