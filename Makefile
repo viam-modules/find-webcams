@@ -9,13 +9,12 @@ TARGET_ARCH := $(call normalize_arch,$(TARGET_ARCH))
 TOOL_BIN = bin/gotools/$(shell uname -s)-$(shell uname -m)
 BIN_OUTPUT_PATH = bin/$(TARGET_OS)-$(TARGET_ARCH)
 export PATH := ${PATH}:$(shell go env GOPATH)/bin
-export GOPRIVATE := github.com/hexbabe/sean-mediadevices
 MODULE_BINARY = find-webcams
 
 # Set cross-compilation environment based on TARGET_OS
 GO_BUILD_ENV :=
 ifeq ($(TARGET_OS),windows)
-	GO_BUILD_ENV += GOOS=windows GOARCH=$(TARGET_ARCH)
+	GO_BUILD_ENV += GOOS=windows GOARCH=$(TARGET_ARCH) CC=x86_64-w64-mingw32-gcc
 	MODULE_BINARY = find-webcams.exe
 else ifeq ($(TARGET_OS),linux)
 	GO_BUILD_ENV += GOOS=linux GOARCH=$(TARGET_ARCH)
@@ -25,7 +24,7 @@ endif
 
 build: format update-rdk
 	rm -f $(BIN_OUTPUT_PATH)/$(MODULE_BINARY)
-	$(GO_BUILD_ENV) CGO_ENABLED=1 go build -tags nomicrophone $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) main.go
+	$(GO_BUILD_ENV) CGO_ENABLED=1 go build $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) main.go
 
 module.tar.gz: build
 	rm -f bin/module.tar.gz
@@ -35,7 +34,7 @@ module.tar.gz: build
 
 setup:
 	if [ "$(SOURCE_OS)" = "linux" ]; then \
-		sudo apt-get install -y apt-utils coreutils tar libnlopt-dev libjpeg-dev pkg-config; \
+		sudo apt-get install -y apt-utils coreutils tar libnlopt-dev libjpeg-dev pkg-config gcc-mingw-w64-x86-64; \
 	fi
 	# remove unused imports
 	go install golang.org/x/tools/cmd/goimports@latest
