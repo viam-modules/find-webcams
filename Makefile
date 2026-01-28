@@ -25,7 +25,7 @@ endif
 
 build: format update-rdk
 	rm -f $(BIN_OUTPUT_PATH)/$(MODULE_BINARY)
-	$(GO_BUILD_ENV) CGO_ENABLED=1 go build $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) main.go
+	$(GO_BUILD_ENV) CGO_ENABLED=1 go build -tags nomicrophone $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) main.go
 
 module.tar.gz: build
 	rm -f bin/module.tar.gz
