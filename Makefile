@@ -27,7 +27,7 @@ setup:
 	fi
 	# remove unused imports
 	go install golang.org/x/tools/cmd/goimports@latest
-	find . -name '*.go' -exec $(GOPATH)/goimports -w {} +
+	find . -name '*.go' -exec sh -c '"$$(go env GOPATH)/bin/goimports" -w "$$@"' _ {} +
 
 
 clean:
