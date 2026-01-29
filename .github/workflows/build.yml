@@ -47,4 +47,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: find-webcams-windows
-          path: bin/module.tar.gz
+          path: module.tar.gz

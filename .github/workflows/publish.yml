@@ -45,7 +45,7 @@ jobs:
         uses: viamrobotics/upload-module@v1
         with:
           meta-path: meta.json
-          module-path: bin/module.tar.gz
+          module-path: module.tar.gz
           platform: windows/amd64
           version: ${{ github.event.release.tag_name }}
           key-id: ${{ secrets.viam_dev_api_key_id }}
