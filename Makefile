@@ -11,7 +11,7 @@ BIN_OUTPUT_PATH = bin/$(TARGET_OS)-$(TARGET_ARCH)
 GOPATH = $(HOME)/go/bin
 export PATH := ${PATH}:$(GOPATH) 
 
-build: format update-rdk
+build: format
 	rm -f $(BIN_OUTPUT_PATH)/find-webcams
 	go build $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/find-webcams main.go
 
@@ -35,7 +35,3 @@ clean:
 
 format:
 	gofmt -w -s .
-	
-update-rdk:
-	go get go.viam.com/rdk@latest
-	go mod tidy
