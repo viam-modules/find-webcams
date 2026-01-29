@@ -12,12 +12,12 @@
       "short_description" : "find webcam video device paths connected to your viam-server to configure webcams"
     }
   ],
-  "entrypoint": "bin/find-webcams",
+  "entrypoint": "find-webcams",
   "first_run": "",
   "build": {
     "build": "make module.tar.gz",
     "setup": "make setup",
-    "path": "bin/module.tar.gz",
+    "path": "module.tar.gz",
     "arch": [
       "darwin/arm64",
       "linux/amd64",
