@@ -8,7 +8,8 @@ SOURCE_ARCH := $(call normalize_arch,$(SOURCE_ARCH))
 TARGET_ARCH := $(call normalize_arch,$(TARGET_ARCH))
 TOOL_BIN = bin/gotools/$(shell uname -s)-$(shell uname -m)
 BIN_OUTPUT_PATH = bin/$(TARGET_OS)-$(TARGET_ARCH)
-export PATH := ${PATH}:$(shell go env GOPATH)/bin
+GOPATH := $(shell go env GOPATH)
+export PATH := ${PATH}:$(GOPATH)/bin
 MODULE_BINARY = find-webcams
 
 # Set cross-compilation environment based on TARGET_OS
@@ -38,7 +39,7 @@ setup:
 	fi
 	# remove unused imports
 	go install golang.org/x/tools/cmd/goimports@latest
-	find . -name '*.go' -exec sh -c '"$$(go env GOPATH)/bin/goimports" -w "$$1"' _ {} \;
+	find . -name '*.go' -exec goimports -w {} +
 
 
 clean:
