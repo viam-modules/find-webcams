@@ -8,38 +8,26 @@ SOURCE_ARCH := $(call normalize_arch,$(SOURCE_ARCH))
 TARGET_ARCH := $(call normalize_arch,$(TARGET_ARCH))
 TOOL_BIN = bin/gotools/$(shell uname -s)-$(shell uname -m)
 BIN_OUTPUT_PATH = bin/$(TARGET_OS)-$(TARGET_ARCH)
-GOPATH := $(shell go env GOPATH)
-export PATH := ${PATH}:$(GOPATH)/bin
-MODULE_BINARY = find-webcams
-
-# Set cross-compilation environment based on TARGET_OS
-GO_BUILD_ENV :=
-ifeq ($(TARGET_OS),windows)
-	GO_BUILD_ENV += GOOS=windows GOARCH=$(TARGET_ARCH) CC=x86_64-w64-mingw32-gcc
-	MODULE_BINARY = find-webcams.exe
-else ifeq ($(TARGET_OS),linux)
-	GO_BUILD_ENV += GOOS=linux GOARCH=$(TARGET_ARCH)
-else ifeq ($(TARGET_OS),darwin)
-	GO_BUILD_ENV += GOOS=darwin GOARCH=$(TARGET_ARCH)
-endif
+GOPATH = $(HOME)/go/bin
+export PATH := ${PATH}:$(GOPATH) 
 
 build: format update-rdk
-	rm -f $(BIN_OUTPUT_PATH)/$(MODULE_BINARY)
-	$(GO_BUILD_ENV) CGO_ENABLED=1 go build $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) main.go
+	rm -f $(BIN_OUTPUT_PATH)/find-webcams
+	go build $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/find-webcams main.go
 
 module.tar.gz: build
 	rm -f bin/module.tar.gz
-	cp $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) bin/$(MODULE_BINARY)
-	tar czf bin/module.tar.gz bin/$(MODULE_BINARY) meta.json
-	rm bin/$(MODULE_BINARY)
+	cp $(BIN_OUTPUT_PATH)/find-webcams bin/find-webcams
+	tar czf bin/module.tar.gz bin/find-webcams meta.json
+	rm bin/find-webcams
 
 setup:
 	if [ "$(SOURCE_OS)" = "linux" ]; then \
-		sudo apt-get install -y apt-utils coreutils tar libnlopt-dev libjpeg-dev pkg-config gcc-mingw-w64-x86-64; \
+		sudo apt-get install -y apt-utils coreutils tar libnlopt-dev libjpeg-dev pkg-config; \
 	fi
 	# remove unused imports
 	go install golang.org/x/tools/cmd/goimports@latest
-	find . -name '*.go' -exec goimports -w {} +
+	find . -name '*.go' -exec $(GOPATH)/goimports -w {} +
 
 
 clean:
