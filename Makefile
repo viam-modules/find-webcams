@@ -15,11 +15,12 @@ MODULE_BINARY = find-webcams
 ifeq ($(TARGET_OS),windows)
 	MODULE_BINARY = find-webcams.exe
 	LDFLAGS = -ldflags="-extldflags=-static -extldflags=-static-libgcc -extldflags=-static-libstdc++"
+	GO_BUILD_ENV = CC=gcc CXX=g++
 endif
 
 build: format
 	rm -f $(BIN_OUTPUT_PATH)/$(MODULE_BINARY)
-	CGO_ENABLED=1 go build $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) main.go
+	$(GO_BUILD_ENV) CGO_ENABLED=1 go build $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) main.go
 
 module.tar.gz: build
 	rm -f bin/module.tar.gz
