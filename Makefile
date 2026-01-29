@@ -9,17 +9,23 @@ TARGET_ARCH := $(call normalize_arch,$(TARGET_ARCH))
 TOOL_BIN = bin/gotools/$(shell uname -s)-$(shell uname -m)
 BIN_OUTPUT_PATH = bin/$(TARGET_OS)-$(TARGET_ARCH)
 GOPATH = $(HOME)/go/bin
-export PATH := ${PATH}:$(GOPATH) 
+export PATH := ${PATH}:$(GOPATH)
+MODULE_BINARY = find-webcams
+
+ifeq ($(TARGET_OS),windows)
+	MODULE_BINARY = find-webcams.exe
+	LDFLAGS = -ldflags="-extldflags=-static -extldflags=-static-libgcc -extldflags=-static-libstdc++"
+endif
 
 build: format
-	rm -f $(BIN_OUTPUT_PATH)/find-webcams
-	go build $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/find-webcams main.go
+	rm -f $(BIN_OUTPUT_PATH)/$(MODULE_BINARY)
+	CGO_ENABLED=1 go build $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) main.go
 
 module.tar.gz: build
 	rm -f bin/module.tar.gz
-	cp $(BIN_OUTPUT_PATH)/find-webcams bin/find-webcams
-	tar czf bin/module.tar.gz bin/find-webcams meta.json
-	rm bin/find-webcams
+	cp $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) bin/$(MODULE_BINARY)
+	tar czf bin/module.tar.gz bin/$(MODULE_BINARY) meta.json
+	rm bin/$(MODULE_BINARY)
 
 setup:
 	if [ "$(SOURCE_OS)" = "linux" ]; then \
@@ -31,7 +37,7 @@ setup:
 
 
 clean:
-	rm -rf $(BIN_OUTPUT_PATH)/find-webcams bin/module.tar.gz find-webcams
+	rm -rf $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) bin/module.tar.gz $(MODULE_BINARY)
 
 format:
 	gofmt -w -s .
