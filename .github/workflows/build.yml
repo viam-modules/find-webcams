@@ -42,3 +42,9 @@ jobs:
       - name: Build module
         run: make module.tar.gz
         shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: module-windows
+          path: bin/module.tar.gz
