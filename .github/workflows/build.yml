@@ -35,6 +35,10 @@ jobs:
         with:
           go-version: '1.25.1'
 
+      - name: Add MinGW to PATH
+        run: echo "C:\msys64\mingw64\bin" >> $GITHUB_PATH
+        shell: bash
+
       - name: Set up
         run: make setup
         shell: bash

@@ -14,8 +14,8 @@ MODULE_BINARY = find-webcams
 
 ifeq ($(TARGET_OS),windows)
 	MODULE_BINARY = find-webcams.exe
-	LDFLAGS = -ldflags="-extldflags=-static -extldflags=-static-libgcc -extldflags=-static-libstdc++"
-	GO_BUILD_ENV = CC=gcc CXX=g++
+	LDFLAGS = -ldflags="-linkmode external"
+	GO_BUILD_ENV = CC=gcc CXX=g++ CGO_LDFLAGS="-static -static-libgcc -static-libstdc++"
 endif
 
 build: format
