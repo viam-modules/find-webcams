@@ -24,27 +24,10 @@ jobs:
     runs-on: windows-2025
     steps:
       - uses: actions/checkout@v4
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25.1'
+      - name: Build Windows module
+        uses: ./.github/actions/build-windows
 
-      - name: Add MinGW to PATH
-        run: echo "C:\msys64\mingw64\bin" >> $GITHUB_PATH
-        shell: bash
-
-      - name: Set up
-        run: make setup
-        shell: bash
-
-      - name: Build module
-        run: make module.tar.gz
-        shell: bash
-      
       - name: Upload viamrtsp module to registry
         uses: viamrobotics/upload-module@v1
         with:
