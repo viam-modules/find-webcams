@@ -157,6 +157,8 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 			// Create unique name for each property option
 			name := fixName(driverInfo.Name)
 			if name == "" {
+				// Temporary fix as names are empty on windows
+				// Related issue: https://github.com/pion/mediadevices/issues/95
 				name = fmt.Sprintf("webcam-%d", i)
 			}
 
