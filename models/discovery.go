@@ -144,6 +144,9 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 
 			// Create unique name for each property option
 			name := fixName(driverInfo.Name)
+			if name == "" {
+				name = "webcam"
+			}
 			if len(props) > 1 {
 				name = name + "-" + fmt.Sprintf("%d", i)
 			}
