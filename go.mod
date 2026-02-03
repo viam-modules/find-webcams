@@ -212,4 +212,4 @@ require (
 	nhooyr.io/websocket v1.8.7 // indirect
 )
 
-replace github.com/pion/mediadevices => github.com/hexbabe/sean-mediadevices v0.0.3-rc0
+replace github.com/pion/mediadevices => github.com/hexbabe/sean-mediadevices v0.0.4-rc0
