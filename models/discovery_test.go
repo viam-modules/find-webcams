@@ -19,18 +19,19 @@ const someName = "USB223;44 Somecam^"
 // fakeDriver is a driver has a label and media properties.
 type fakeDriver struct {
 	label string
+	name  string
 	props []prop.Media
 }
 
 func (d *fakeDriver) Open() error              { return nil }
 func (d *fakeDriver) Properties() []prop.Media { return d.props }
 func (d *fakeDriver) ID() string               { return d.label }
-func (d *fakeDriver) Info() driver.Info        { return driver.Info{Label: d.label, Name: someName} }
+func (d *fakeDriver) Info() driver.Info        { return driver.Info{Label: d.label, Name: d.name} }
 func (d *fakeDriver) Status() driver.State     { return "some state" }
 func (d *fakeDriver) Close() error             { return nil }
 
-func newFakeDriver(label string, props []prop.Media) driver.Driver {
-	return &fakeDriver{label: label, props: props}
+func newFakeDriver(label, name string, props []prop.Media) driver.Driver {
+	return &fakeDriver{label: label, name: name, props: props}
 }
 
 func testGetDrivers() []driver.Driver {
@@ -48,8 +49,8 @@ func testGetDrivers() []driver.Driver {
 			DeviceID: "some_device_id;",
 		},
 	}
-	withProps := newFakeDriver("some_label", props)
-	withoutProps := newFakeDriver("another label", []prop.Media{})
+	withProps := newFakeDriver("some_label", someName, props)
+	withoutProps := newFakeDriver("another label", someName, []prop.Media{})
 	return []driver.Driver{withProps, withoutProps}
 }
 
@@ -90,4 +91,22 @@ func TestDiscoveryWebcam(t *testing.T) {
 	test.That(t, cfg2.Height, test.ShouldEqual, 480)
 	test.That(t, cfg2.Format, test.ShouldEqual, "YUYV")
 	test.That(t, cfg2.FrameRate, test.ShouldEqual, 30.0)
+}
+
+func TestDiscoveryWebcamEmptyName(t *testing.T) {
+	logger := logging.NewTestLogger(t)
+
+	// Case 1: Empty name, fallback to "webcam"
+	getDrivers := func() []driver.Driver {
+		// Name ";;;;" becomes "" after fixName
+		d := newFakeDriver("some_label", ";;;;", []prop.Media{
+			{Video: prop.Video{Width: 640, Height: 480, FrameFormat: "MJPEG", FrameRate: 30.0}},
+		})
+		return []driver.Driver{d}
+	}
+
+	resp, err := findCameras(context.Background(), getDrivers, logger)
+	test.That(t, err, test.ShouldBeNil)
+	test.That(t, resp, test.ShouldHaveLength, 1)
+	test.That(t, resp[0].Name, test.ShouldEqual, "webcam")
 }
