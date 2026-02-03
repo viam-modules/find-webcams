@@ -214,4 +214,4 @@ require (
 
 replace github.com/pion/mediadevices => github.com/hexbabe/sean-mediadevices v0.0.4-rc0
 
-replace go.viam.com/rdk => github.com/hexbabe/sean-rdk v0.111.0-fix-windows-webcam-path
+replace go.viam.com/rdk => github.com/hexbabe/sean-rdk v0.111.0-fix-windows-webcam-path-rc1
