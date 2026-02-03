@@ -4,7 +4,7 @@ This module provides a viam discovery service for automatically detecting and co
 
 ## Overview
 
-The [`webcam-discovery`](models/module.go) discovery service automatically:
+The [`webcam-discovery`](models/discovery.go) discovery service automatically:
 - Scans for connected USB webcam devices
 - Detects their capabilities and configuration
 - Generates the appropriate Viam resource configurations

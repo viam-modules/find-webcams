@@ -15,7 +15,7 @@
       "api": "rdk:component:camera",
       "model": "viam:find-webcams:webcam",
       "markdown_link" : "README.md#webcam",
-      "short_description" : "webcam camera component using mediadevices"
+      "short_description" : "modular webcam camera component"
     }
   ],
   "entrypoint": "find-webcams",

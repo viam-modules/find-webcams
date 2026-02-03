@@ -62,7 +62,7 @@ func TestDiscoveryWebcam(t *testing.T) {
 
 	for i, config := range resp {
 		test.That(t, config.API, test.ShouldResemble, camera.API)
-		test.That(t, config.Model, test.ShouldResemble, videosource.ModelWebcam)
+		test.That(t, config.Model, test.ShouldResemble, Webcam)
 
 		// Names should be unique with index suffix
 		expectedName := fixName(someName) + "-" + fmt.Sprintf("%d", i)
