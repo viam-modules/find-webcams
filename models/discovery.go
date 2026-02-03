@@ -86,7 +86,7 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 	webcams := []resource.Config{}
 
 	drivers := getDrivers()
-	for _, d := range drivers {
+	for i, d := range drivers {
 		driverInfo := d.Info()
 
 		// Skip Broadcom/BCM devices (typically Raspberry Pi camera-related devices)
@@ -122,9 +122,9 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 		logger.Debugf("found %d properties for driver %s", len(props), driverInfo.Name)
 
 		// Create a webcam resource config for every property option
-		for i, p := range props {
+		for j, p := range props {
 			logger.Debugf("property %d: %dx%d @ %dfps, format: %s",
-				i, p.Video.Width, p.Video.Height, p.Video.FrameRate, p.Video.FrameFormat)
+				j, p.Video.Width, p.Video.Height, p.Video.FrameRate, p.Video.FrameFormat)
 			var result map[string]interface{}
 			attributes := videosource.WebcamConfig{
 				Path:      label,
@@ -145,16 +145,25 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 			// Create unique name for each property option
 			name := fixName(driverInfo.Name)
 			if name == "" {
-				name = "webcam"
+				name = fmt.Sprintf("webcam-%d", i)
 			}
+
 			if len(props) > 1 {
-				name = name + "-" + fmt.Sprintf("%d", i)
+				name = name + "-" + fmt.Sprintf("%d", j)
+			}
+
+			// Use modular model for windows, else use RDK builtin
+			var model resource.Model
+			if runtime.GOOS == "windows" {
+				model = Webcam
+			} else {
+				model = videosource.ModelWebcam
 			}
 
 			wc := resource.Config{
 				Name:                name,
 				API:                 camera.API,
-				Model:               Webcam,
+				Model:               model,
 				Attributes:          result,
 				ConvertedAttributes: attributes,
 			}
