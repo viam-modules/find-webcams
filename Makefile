@@ -3,9 +3,12 @@ SOURCE_ARCH ?= $(shell uname -m)
 TARGET_OS ?= $(SOURCE_OS)
 TARGET_ARCH ?= $(SOURCE_ARCH)
 normalize_arch = $(if $(filter aarch64,$(1)),arm64,$(if $(filter x86_64,$(1)),amd64,$(1)))
+# Normalize MSYS2/MinGW to windows. This happens on CI runners with its unix compatibility layer
+normalize_os = $(if $(findstring mingw,$(1)),windows,$(if $(findstring msys,$(1)),windows,$(1)))
 # Normalize the source and target arch to arm64 or amd64 for compatibility with go build.
 SOURCE_ARCH := $(call normalize_arch,$(SOURCE_ARCH))
 TARGET_ARCH := $(call normalize_arch,$(TARGET_ARCH))
+TARGET_OS := $(call normalize_os,$(TARGET_OS))
 TOOL_BIN = bin/gotools/$(shell uname -s)-$(shell uname -m)
 BIN_OUTPUT_PATH = $(TARGET_OS)-$(TARGET_ARCH)
 GOPATH = $(HOME)/go/bin
