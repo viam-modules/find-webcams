@@ -19,14 +19,21 @@ jobs:
           key-value: ${{ secrets.viam_dev_api_key }}
           token: ${{ github.token }}
 
-  publish-windows:
-    name: Build and Upload module (windows)
-    runs-on: windows-2025
-    steps:
-      - uses: actions/checkout@v4
+  build-windows:
+    uses: ./.github/workflows/build-and-upload-windows.yml
+    with:
+      ref: ${{ github.sha }}
+      include-meta: true
 
-      - name: Build Windows module
-        uses: ./.github/actions/build-windows
+  publish-windows:
+    name: Publish module (windows)
+    needs: build-windows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: find-webcams-windows
 
       - name: Upload find-webcams module to registry
         uses: viamrobotics/upload-module@v1
