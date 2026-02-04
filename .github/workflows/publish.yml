@@ -28,7 +28,7 @@ jobs:
       - name: Build Windows module
         uses: ./.github/actions/build-windows
 
-      - name: Upload viamrtsp module to registry
+      - name: Upload find-webcams module to registry
         uses: viamrobotics/upload-module@v1
         with:
           meta-path: meta.json

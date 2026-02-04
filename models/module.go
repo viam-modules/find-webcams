@@ -11,6 +11,7 @@ import (
 	"github.com/pion/mediadevices/pkg/driver"
 	mdcam "github.com/pion/mediadevices/pkg/driver/camera"
 	"github.com/pion/mediadevices/pkg/prop"
+	"github.com/viam-labs/modular-webcam/modularwebcam"
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/components/camera/videosource"
 	"go.viam.com/rdk/logging"
@@ -166,16 +167,28 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 				name = name + "-" + fmt.Sprintf("%d", j)
 			}
 
+			var model resource.Model
+			if runtime.GOOS == "windows" {
+				model = modularwebcam.Webcam
+			} else {
+				model = videosource.ModelWebcam
+			}
+
 			wc := resource.Config{
 				Name:                name,
 				API:                 camera.API,
-				Model:               videosource.ModelWebcam,
+				Model:               model,
 				Attributes:          result,
 				ConvertedAttributes: attributes,
 			}
 
 			webcams = append(webcams, wc)
 		}
+	}
+
+	if runtime.GOOS == "windows" && len(webcams) > 0 {
+		logger.Info(`windows webcam support requires the module 'viam-labs:modular-webcam' to be available on the machine.
+Please make sure to add it to the machine before adding a component from the discovery result.`)
 	}
 
 	return webcams, nil
