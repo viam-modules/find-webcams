@@ -11,6 +11,7 @@ import (
 	"github.com/pion/mediadevices/pkg/driver"
 	mdcam "github.com/pion/mediadevices/pkg/driver/camera"
 	"github.com/pion/mediadevices/pkg/prop"
+	"github.com/viam-labs/modular-webcam/modularwebcam"
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/components/camera/videosource"
 	"go.viam.com/rdk/logging"
@@ -84,7 +85,7 @@ func fixName(name string) string {
 
 // Discover webcam attributes.
 func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger logging.Logger) ([]resource.Config, error) {
-	if runtime.GOOS == "linux" {
+	if runtime.GOOS == "linux" || runtime.GOOS == "windows" {
 		// Clear all registered camera devices before calling Initialize to prevent duplicates.
 		// If first initalize call, this will be a noop.
 		manager := driver.GetManager()
@@ -98,7 +99,7 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 	webcams := []resource.Config{}
 
 	drivers := getDrivers()
-	for _, d := range drivers {
+	for i, d := range drivers {
 		driverInfo := d.Info()
 
 		// Skip Broadcom/BCM devices (typically Raspberry Pi camera-related devices)
@@ -123,11 +124,10 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 
 		labelParts := strings.Split(driverInfo.Label, mdcam.LabelSeparator)
 
-		// for mac, the device path is the first part of the label
+		// For macOS and Windows: Label is a single identifier (no separator)
+		// For Linux: Label is "name;devicePath" so we need the second part (devicePath)
 		label := labelParts[0]
 		if len(labelParts) > 1 {
-			// for linux, the device path that works is the second part of the label
-			// unknown why
 			label = labelParts[1]
 		}
 
@@ -135,9 +135,9 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 		logger.Debugf("found %d properties for driver %s", len(props), driverInfo.Name)
 
 		// Create a webcam resource config for every property option
-		for i, p := range props {
+		for j, p := range props {
 			logger.Debugf("property %d: %dx%d @ %dfps, format: %s",
-				i, p.Video.Width, p.Video.Height, p.Video.FrameRate, p.Video.FrameFormat)
+				j, p.Video.Width, p.Video.Height, p.Video.FrameRate, p.Video.FrameFormat)
 			var result map[string]interface{}
 			attributes := videosource.WebcamConfig{
 				Path:      label,
@@ -157,20 +157,38 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 
 			// Create unique name for each property option
 			name := fixName(driverInfo.Name)
+			if name == "" {
+				// Temporary fix as names are empty on windows
+				// Related issue: https://github.com/pion/mediadevices/issues/95
+				name = fmt.Sprintf("webcam-%d", i)
+			}
+
 			if len(props) > 1 {
-				name = name + "-" + fmt.Sprintf("%d", i)
+				name = name + "-" + fmt.Sprintf("%d", j)
+			}
+
+			var model resource.Model
+			if runtime.GOOS == "windows" {
+				model = modularwebcam.Webcam
+			} else {
+				model = videosource.ModelWebcam
 			}
 
 			wc := resource.Config{
 				Name:                name,
 				API:                 camera.API,
-				Model:               videosource.ModelWebcam,
+				Model:               model,
 				Attributes:          result,
 				ConvertedAttributes: attributes,
 			}
 
 			webcams = append(webcams, wc)
 		}
+	}
+
+	if runtime.GOOS == "windows" && len(webcams) > 0 {
+		logger.Info(`windows webcam support requires the module 'viam-labs:modular-webcam' to be available on the machine.
+Please make sure to add it to the machine before adding a component from the discovery result.`)
 	}
 
 	return webcams, nil

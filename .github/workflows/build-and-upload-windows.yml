@@ -1,0 +1,41 @@
+# Note: "Upload" means to upload as an artifact to Github, not upload/publish to registry
+name: Build and Upload Windows reusable workflow
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+      repository:
+        required: false
+        type: string
+        default: ''
+      artifact-name:
+        required: false
+        type: string
+        default: 'find-webcams-windows'
+      include-meta:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build-windows:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repository || github.repository }}
+          ref: ${{ inputs.ref }}
+
+      - name: Build Windows module
+        uses: ./.github/actions/build-windows
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: |
+            module.tar.gz
+            ${{ inputs.include-meta && 'meta.json' || '' }}

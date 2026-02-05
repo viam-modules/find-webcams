@@ -3,23 +3,33 @@ SOURCE_ARCH ?= $(shell uname -m)
 TARGET_OS ?= $(SOURCE_OS)
 TARGET_ARCH ?= $(SOURCE_ARCH)
 normalize_arch = $(if $(filter aarch64,$(1)),arm64,$(if $(filter x86_64,$(1)),amd64,$(1)))
+# Normalize MSYS2/MinGW to windows. This happens on CI runners with its unix compatibility layer
+normalize_os = $(if $(findstring mingw,$(1)),windows,$(if $(findstring msys,$(1)),windows,$(1)))
 # Normalize the source and target arch to arm64 or amd64 for compatibility with go build.
 SOURCE_ARCH := $(call normalize_arch,$(SOURCE_ARCH))
 TARGET_ARCH := $(call normalize_arch,$(TARGET_ARCH))
+TARGET_OS := $(call normalize_os,$(TARGET_OS))
 TOOL_BIN = bin/gotools/$(shell uname -s)-$(shell uname -m)
-BIN_OUTPUT_PATH = bin/$(TARGET_OS)-$(TARGET_ARCH)
+BIN_OUTPUT_PATH = $(TARGET_OS)-$(TARGET_ARCH)
 GOPATH = $(HOME)/go/bin
-export PATH := ${PATH}:$(GOPATH) 
+export PATH := ${PATH}:$(GOPATH)
+MODULE_BINARY = find-webcams
 
-build: format update-rdk
-	rm -f $(BIN_OUTPUT_PATH)/find-webcams
-	go build $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/find-webcams main.go
+ifeq ($(TARGET_OS),windows)
+	MODULE_BINARY = find-webcams.exe
+	LDFLAGS = -ldflags="-linkmode external"
+	GO_BUILD_ENV = CC=gcc CXX=g++ CGO_LDFLAGS="-static -static-libgcc -static-libstdc++"
+endif
+
+build: format
+	rm -f $(BIN_OUTPUT_PATH)/$(MODULE_BINARY)
+	$(GO_BUILD_ENV) CGO_ENABLED=1 go build $(LDFLAGS) -o $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) main.go
 
 module.tar.gz: build
-	rm -f bin/module.tar.gz
-	cp $(BIN_OUTPUT_PATH)/find-webcams bin/find-webcams
-	tar czf bin/module.tar.gz bin/find-webcams meta.json
-	rm bin/find-webcams
+	rm -f module.tar.gz
+	cp $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) $(MODULE_BINARY)
+	tar czf module.tar.gz $(MODULE_BINARY) meta.json
+	rm $(MODULE_BINARY)
 
 setup:
 	if [ "$(SOURCE_OS)" = "linux" ]; then \
@@ -27,15 +37,11 @@ setup:
 	fi
 	# remove unused imports
 	go install golang.org/x/tools/cmd/goimports@latest
-	find . -name '*.go' -exec $(GOPATH)/goimports -w {} +
+	find . -name '*.go' -exec sh -c '"$$(go env GOPATH)/bin/goimports" -w "$$@"' _ {} +
 
 
 clean:
-	rm -rf $(BIN_OUTPUT_PATH)/find-webcams bin/module.tar.gz find-webcams
+	rm -rf $(BIN_OUTPUT_PATH)/$(MODULE_BINARY) module.tar.gz $(MODULE_BINARY)
 
 format:
 	gofmt -w -s .
-	
-update-rdk:
-	go get go.viam.com/rdk@latest
-	go mod tidy
