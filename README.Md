@@ -24,7 +24,7 @@ Add this module to your Viam robot's configuration:
   "services": [
     {
       "name": "webcam-discovery",
-      "api": "rdk:service:discovery", 
+      "api": "rdk:service:discovery",
       "model": "viam:find-webcams:webcam-discovery",
       "attributes" : {}
     }
@@ -38,5 +38,22 @@ Add this module to your Viam robot's configuration:
     }
   ]
 }
+```
 
+## Windows Support
 
+On Windows, discovered webcams' returned configurations use the `viam-labs:modular-webcam:webcam` model instead of the built-in webcam component `rdk:builtin:webcam`. This dependency ([github.com/viam-labs/modular-webcam](https://github.com/viam-labs/modular-webcam)) provides Windows-compatible webcam support.
+
+When adding webcam components from discovery results on a Windows machine, make sure to also add the `viam-labs:modular-webcam` module to your machine configuration:
+
+```json
+{
+  "modules": [
+    {
+      "name": "modular-webcam",
+      "module_id": "viam-labs:modular-webcam",
+      "type": "registry"
+    }
+  ]
+}
+```
