@@ -124,11 +124,14 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 
 		labelParts := strings.Split(driverInfo.Label, mdcam.LabelSeparator)
 
-		// For macOS and Windows: Label is a single identifier (no separator)
-		// For Linux: Label is "<by-id|by-path|videoN>;<videoN>", where the first
-		// half is the stable identifier and the second half is the resolved device node.
-		label := labelParts[0]
+		// label feeds video_path (used to OPEN the camera); deviceID is the stable
+		// identifier surfaced as metadata. On Linux they diverge — label becomes the
+		// resolved /dev/videoN basename while deviceID stays as the by-id/by-path
+		// name from labelParts[0]. On macOS/Windows pion exposes a single string
+		// (AVFoundation UID / DirectShow friendly name) that serves both roles, so
+		// label == deviceID is intentional, not duplication.
 		deviceID := labelParts[0]
+		label := labelParts[0]
 		if len(labelParts) > 1 {
 			label = labelParts[1]
 		}
