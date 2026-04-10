@@ -77,6 +77,30 @@ func TestDiscoveryWebcamNaming(t *testing.T) {
 
 		cfg2, _ := resp[2].ConvertedAttributes.(videosource.WebcamConfig)
 		test.That(t, cfg2.Width, test.ShouldEqual, 640)
+
+		// device_id should be surfaced in Attributes for every result.
+		for _, config := range resp {
+			test.That(t, config.Attributes["device_id"], test.ShouldEqual, "some_label")
+		}
+	})
+
+	t.Run("Linux-style label splits into stable device_id and device node path", func(t *testing.T) {
+		getDrivers := func() []driver.Driver {
+			// Simulates pion's Linux label: "<by-id filename>;<videoN>".
+			label := "usb-046d_Logitech_Webcam_C920_A1B2C3D4-video-index0;video0"
+			d := newFakeDriver(label, "c920", []prop.Media{
+				{Video: prop.Video{Width: 1280, Height: 720, FrameFormat: "MJPEG", FrameRate: 30.0}},
+			})
+			return []driver.Driver{d}
+		}
+
+		resp, err := findCameras(context.Background(), getDrivers, logger)
+		test.That(t, err, test.ShouldBeNil)
+		test.That(t, resp, test.ShouldHaveLength, 1)
+		test.That(t, resp[0].Attributes["device_id"], test.ShouldEqual,
+			"usb-046d_Logitech_Webcam_C920_A1B2C3D4-video-index0")
+		cfg, _ := resp[0].ConvertedAttributes.(videosource.WebcamConfig)
+		test.That(t, cfg.Path, test.ShouldEqual, "video0")
 	})
 
 	t.Run("Empty name fallback and uniqueness across multiple drivers", func(t *testing.T) {

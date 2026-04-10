@@ -14,6 +14,24 @@ No models in this module have any attributes. Just add the model to your machine
 
 The discovery service detects the highest available resolution of the first format it finds for a usb webcam connected to the machine running viam-server.
 
+## Discovery output
+
+Each discovered camera is returned as a `camera` component config. In addition to the standard `webcam` attributes (`video_path`, `format`, `width_px`, `height_px`, `frame_rate`), the service populates a `device_id` attribute intended as the most stable identifier the OS can provide for the physical device. It is informational — the webcam component itself opens the camera via `video_path`.
+
+### Stability of `device_id` across reboots
+
+The meaning and stability of `device_id` depends on the host platform:
+
+| Platform | Source | Stable across reboots? | Stable across USB port changes? | Caveats |
+| --- | --- | --- | --- | --- |
+| **Linux** (`by-id`) | `/dev/v4l/by-id/usb-<vendor>_<product>_<serial>-video-indexN` | Yes | Yes | Only generated when the device exposes a non-empty USB serial descriptor. Two identical devices without serials can collide. |
+| **Linux** (`by-path`) | `/dev/v4l/by-path/pci-…-usb-<hub>:<port>…-video-indexN` | Yes | **No** — changes if you move the cable | Used as a fallback when `by-id` is unavailable. Distinguishes identical devices by physical port. |
+| **Linux** (fallback) | `videoN` | **No** | No | Used only when neither `by-id` nor `by-path` exists. `N` is assigned in probe order and can flip between reboots. |
+| **macOS** | `AVCaptureDevice.uniqueID` | Yes for built-in cameras; yes for USB cameras **on the same port** | **No** for USB (Apple derives the ID from USB `locationID` + vendor/product) | |
+| **Windows** | DirectShow friendly name (e.g. `Logitech HD Pro Webcam C920`) | Yes | Yes | Collides for two identical devices. Can change if the driver renames the device. |
+
+On Linux, the service prefers the most stable identifier available: `by-id` → `by-path` → `videoN`. If you need a serial-number-level identifier for tracking a physical camera across reboots *and* replugs, you must rely on `by-id`, which in turn requires the device to expose a USB serial.
+
 ## Example config
 
 Add this module to your Viam robot's configuration:
