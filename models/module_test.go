@@ -49,7 +49,10 @@ func testGetDrivers() []driver.Driver {
 			DeviceID: "some_device_id;",
 		},
 	}
-	withProps := newFakeDriver("some_label", someName, props)
+	// Simulate pion's Linux label format "<stable id>;<device node>" so the
+	// fake driver exercises both halves: device_id should be "some_device_id"
+	// and video_path should be "some_label".
+	withProps := newFakeDriver("some_device_id;some_label", someName, props)
 	withoutProps := newFakeDriver("another label", someName, []prop.Media{})
 	return []driver.Driver{withProps, withoutProps}
 }
@@ -71,36 +74,21 @@ func TestDiscoveryWebcamNaming(t *testing.T) {
 			test.That(t, config.Name, test.ShouldEqual, expectedName)
 		}
 
-		cfg0, _ := resp[0].ConvertedAttributes.(videosource.WebcamConfig)
+		cfg0, ok := resp[0].ConvertedAttributes.(videosource.WebcamConfig)
+		test.That(t, ok, test.ShouldBeTrue)
 		test.That(t, cfg0.Width, test.ShouldEqual, 1920)
 		test.That(t, cfg0.Format, test.ShouldEqual, "MJPEG")
+		test.That(t, cfg0.Path, test.ShouldEqual, "some_label")
 
-		cfg2, _ := resp[2].ConvertedAttributes.(videosource.WebcamConfig)
+		cfg2, ok := resp[2].ConvertedAttributes.(videosource.WebcamConfig)
+		test.That(t, ok, test.ShouldBeTrue)
 		test.That(t, cfg2.Width, test.ShouldEqual, 640)
 
-		// device_id should be surfaced in Attributes for every result.
+		// device_id should be surfaced in Attributes for every result and should
+		// be the stable half of the label, not the device node path.
 		for _, config := range resp {
-			test.That(t, config.Attributes["device_id"], test.ShouldEqual, "some_label")
+			test.That(t, config.Attributes["device_id"], test.ShouldEqual, "some_device_id")
 		}
-	})
-
-	t.Run("Linux-style label splits into stable device_id and device node path", func(t *testing.T) {
-		getDrivers := func() []driver.Driver {
-			// Simulates pion's Linux label: "<by-id filename>;<videoN>".
-			label := "usb-046d_Logitech_Webcam_C920_A1B2C3D4-video-index0;video0"
-			d := newFakeDriver(label, "c920", []prop.Media{
-				{Video: prop.Video{Width: 1280, Height: 720, FrameFormat: "MJPEG", FrameRate: 30.0}},
-			})
-			return []driver.Driver{d}
-		}
-
-		resp, err := findCameras(context.Background(), getDrivers, logger)
-		test.That(t, err, test.ShouldBeNil)
-		test.That(t, resp, test.ShouldHaveLength, 1)
-		test.That(t, resp[0].Attributes["device_id"], test.ShouldEqual,
-			"usb-046d_Logitech_Webcam_C920_A1B2C3D4-video-index0")
-		cfg, _ := resp[0].ConvertedAttributes.(videosource.WebcamConfig)
-		test.That(t, cfg.Path, test.ShouldEqual, "video0")
 	})
 
 	t.Run("Empty name fallback and uniqueness across multiple drivers", func(t *testing.T) {
