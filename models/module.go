@@ -127,6 +127,8 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 		// For macOS and Windows: Label is a single identifier (no separator)
 		// For Linux: Label is "name;devicePath" so we need the second part (devicePath)
 		label := labelParts[0]
+		// OS-provided stable identifier for the device that persists across reboots
+		deviceID := labelParts[0]
 		if len(labelParts) > 1 {
 			label = labelParts[1]
 		}
@@ -154,6 +156,7 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 			if err = json.Unmarshal(jsonBytes, &result); err != nil {
 				return nil, err
 			}
+			result["device_id"] = deviceID
 
 			// Create unique name for each property option
 			name := fixName(driverInfo.Name)

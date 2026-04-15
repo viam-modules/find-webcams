@@ -14,6 +14,10 @@ No models in this module have any attributes. Just add the model to your machine
 
 The discovery service detects the highest available resolution of the first format it finds for a usb webcam connected to the machine running viam-server.
 
+## Discovery output
+
+Each discovered camera is returned as a `camera` component config with the standard `webcam` attributes (`video_path`, `format`, `width_px`, `height_px`, `frame_rate`) plus a `device_id` attribute. `device_id` is the OS-provided stable identifier for the physical device (Linux `by-id`/`by-path`, macOS `AVCaptureDevice.uniqueID`, Windows DirectShow friendly name) and is informational — the webcam component opens the camera via `video_path`.
+
 ## Example config
 
 Add this module to your Viam robot's configuration:
