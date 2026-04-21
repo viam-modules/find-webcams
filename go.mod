@@ -3,8 +3,8 @@ module find-webcams
 go 1.25.1
 
 require (
-	github.com/pion/mediadevices v0.9.4
-	github.com/viam-labs/modular-webcam v0.1.0
+	github.com/pion/mediadevices v0.10.0
+	github.com/viam-labs/modular-webcam v0.2.1
 	go.viam.com/rdk v0.118.0
 	go.viam.com/test v1.2.4
 )
