@@ -124,14 +124,13 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 
 		labelParts := strings.Split(driverInfo.Label, mdcam.LabelSeparator)
 
-		// For macOS and Windows: Label is a single identifier (no separator)
-		// For Linux: Label is "name;devicePath" so we need the second part (devicePath)
-		label := labelParts[0]
-		// OS-provided stable identifier for the device that persists across reboots
-		deviceID := labelParts[0]
-		if len(labelParts) > 1 {
-			label = labelParts[1]
-		}
+		// Use labelParts[0] as video_path. pion populates it with the most stable
+		// identifier available for the device: the /dev/v4l/by-id (or by-path) name
+		// on Linux, or the single label on macOS/Windows. On Linux labelParts[1] is
+		// the raw /dev/videoN node, which is NOT stable across reboots or replugs, so
+		// we intentionally do not use it. The webcam component matches video_path
+		// against every label part, so this stable name still resolves the device.
+		videoPath := labelParts[0]
 
 		logger.Debugf("found camera drivers with info  %#v", driverInfo)
 		logger.Debugf("found %d properties for driver %s", len(props), driverInfo.Name)
@@ -142,7 +141,7 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 				j, p.Video.Width, p.Video.Height, p.Video.FrameRate, p.Video.FrameFormat)
 			var result map[string]interface{}
 			attributes := videosource.WebcamConfig{
-				Path:      label,
+				Path:      videoPath,
 				Format:    string(p.Video.FrameFormat),
 				Width:     p.Video.Width,
 				Height:    p.Video.Height,
@@ -156,7 +155,6 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 			if err = json.Unmarshal(jsonBytes, &result); err != nil {
 				return nil, err
 			}
-			result["device_id"] = deviceID
 
 			// Create unique name for each property option
 			name := fixName(driverInfo.Name)

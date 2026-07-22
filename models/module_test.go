@@ -49,9 +49,9 @@ func testGetDrivers() []driver.Driver {
 			DeviceID: "some_device_id;",
 		},
 	}
-	// Simulate pion's Linux label format "<stable id>;<device node>" so the
-	// fake driver exercises both halves: device_id should be "some_device_id"
-	// and video_path should be "some_label".
+	// Simulate pion's Linux label format "<stable id>;<device node>". We surface
+	// the stable first half ("some_device_id") as video_path and intentionally
+	// discard the unstable device node ("some_label").
 	withProps := newFakeDriver("some_device_id;some_label", someName, props)
 	withoutProps := newFakeDriver("another label", someName, []prop.Media{})
 	return []driver.Driver{withProps, withoutProps}
@@ -78,16 +78,16 @@ func TestDiscoveryWebcamNaming(t *testing.T) {
 		test.That(t, ok, test.ShouldBeTrue)
 		test.That(t, cfg0.Width, test.ShouldEqual, 1920)
 		test.That(t, cfg0.Format, test.ShouldEqual, "MJPEG")
-		test.That(t, cfg0.Path, test.ShouldEqual, "some_label")
+		// video_path is the stable first label half, not the device node.
+		test.That(t, cfg0.Path, test.ShouldEqual, "some_device_id")
 
 		cfg2, ok := resp[2].ConvertedAttributes.(videosource.WebcamConfig)
 		test.That(t, ok, test.ShouldBeTrue)
 		test.That(t, cfg2.Width, test.ShouldEqual, 640)
 
-		// device_id should be surfaced in Attributes for every result and should
-		// be the stable half of the label, not the device node path.
+		// Every result should carry the stable identifier as video_path.
 		for _, config := range resp {
-			test.That(t, config.Attributes["device_id"], test.ShouldEqual, "some_device_id")
+			test.That(t, config.Attributes["video_path"], test.ShouldEqual, "some_device_id")
 		}
 	})
 
