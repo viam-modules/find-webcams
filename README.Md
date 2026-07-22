@@ -16,7 +16,7 @@ The discovery service detects the highest available resolution of the first form
 
 ## Discovery output
 
-Each discovered camera is returned as a `camera` component config with the standard `webcam` attributes (`video_path`, `format`, `width_px`, `height_px`, `frame_rate`) plus a `device_id` attribute. `device_id` is the OS-provided stable identifier for the physical device (Linux `by-id`/`by-path`, macOS `AVCaptureDevice.uniqueID`, Windows DirectShow friendly name) and is informational — the webcam component opens the camera via `video_path`.
+Each discovered camera is returned as a `camera` component config with the standard `webcam` attributes (`video_path`, `format`, `width_px`, `height_px`, `frame_rate`). On Linux `video_path` is set to the stable `/dev/v4l/by-id` (or `by-path`) name rather than the volatile `/dev/videoN` node, so it survives reboots and replugs.
 
 ## Example config
 
