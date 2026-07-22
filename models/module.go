@@ -124,12 +124,13 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 
 		labelParts := strings.Split(driverInfo.Label, mdcam.LabelSeparator)
 
-		// Use labelParts[0] as video_path. pion populates it with the most stable
-		// identifier available for the device: the /dev/v4l/by-id (or by-path) name
-		// on Linux, or the single label on macOS/Windows. On Linux labelParts[1] is
-		// the raw /dev/videoN node, which is NOT stable across reboots or replugs, so
-		// we intentionally do not use it. The webcam component matches video_path
-		// against every label part, so this stable name still resolves the device.
+		// video_path is labelParts[0], the most stable identifier the OS provides:
+		//   Linux:   /dev/v4l/by-id (or by-path) name; labelParts[1] is the raw
+		//            /dev/videoN node, which is NOT stable across reboots/replugs.
+		//   macOS:   AVFoundation device UID (label has no separator).
+		//   Windows: DirectShow moniker path (label has no separator).
+		// The webcam component matches video_path against every label part, so the
+		// stable name still resolves the device.
 		videoPath := labelParts[0]
 
 		logger.Debugf("found camera drivers with info  %#v", driverInfo)
