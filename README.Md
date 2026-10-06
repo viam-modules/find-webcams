@@ -18,6 +18,10 @@ The discovery service detects the highest available resolution of the first form
 
 Each discovered camera is returned as a `camera` component config with the standard `webcam` attributes (`video_path`, `format`, `width_px`, `height_px`, `frame_rate`). On Linux `video_path` is set to the stable `/dev/v4l/by-id` (or `by-path`) name rather than the volatile `/dev/videoN` node, so it survives reboots and replugs.
 
+## Windows support
+
+Discovered webcams use the built-in `rdk:builtin:webcam` model on every platform. On Windows, that model requires **viam-server v1.11.0 or later**; older versions of viam-server cannot run the configurations this module returns on Windows. If you previously used the `viam-labs:modular-webcam` module or the `windows-webcam` fragment, upgrade viam-server and switch your camera components to `rdk:builtin:webcam`.
+
 ## Example config
 
 Add this module to your Viam robot's configuration:
@@ -38,26 +42,6 @@ Add this module to your Viam robot's configuration:
     {
       "name": "find-webcams",
       "module_id": "viam:find-webcams",
-      "type": "registry"
-    }
-  ]
-}
-```
-
-## Windows Support
-
-On Windows, discovered webcams' returned configurations use the `viam-labs:modular-webcam:webcam` model instead of the built-in webcam component `rdk:builtin:webcam`. This dependency ([github.com/viam-labs/modular-webcam](https://github.com/viam-labs/modular-webcam)) provides Windows-compatible webcam support.
-
-We recommend using the viam-labs fragment `windows-webcam`, which will automatically add the find-webcams module, the modular-webcam module, as well as a discovery resource automatically for you. You can do this by navigating to your machine on app.viam.com, clicking the create button `+`, clicking `Insert fragment`, then typing `windows-webcam`.
-
-Alternatively, you can manually add the `viam-labs:modular-webcam` module to your machine configuration:
-
-```json
-{
-  "modules": [
-    {
-      "name": "modular-webcam",
-      "module_id": "viam-labs:modular-webcam",
       "type": "registry"
     }
   ]
