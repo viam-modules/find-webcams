@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/pion/mediadevices v0.10.0
 	github.com/viam-labs/modular-webcam v0.2.1
-	go.viam.com/rdk v1.11.0
+	go.viam.com/rdk v1.12.0
 	go.viam.com/test v1.2.5
 )
 
