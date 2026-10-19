@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"runtime"
 	"testing"
 
 	"go.viam.com/rdk/logging"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/pion/mediadevices/pkg/driver"
 	"github.com/pion/mediadevices/pkg/prop"
-	"github.com/viam-labs/modular-webcam/modularwebcam"
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/components/camera/videosource"
 	"go.viam.com/rdk/resource"
@@ -95,14 +93,9 @@ func TestDiscoveryWebcamNaming(t *testing.T) {
 		test.That(t, err, test.ShouldBeNil)
 		test.That(t, resp, test.ShouldHaveLength, 3)
 
-		expectedModel := videosource.ModelWebcam
-		if runtime.GOOS == "windows" {
-			expectedModel = modularwebcam.Webcam
-		}
-
 		for i, config := range resp {
 			test.That(t, config.API, test.ShouldResemble, camera.API)
-			test.That(t, config.Model, test.ShouldResemble, expectedModel)
+			test.That(t, config.Model, test.ShouldResemble, videosource.ModelWebcam)
 
 			// Names should be unique with index suffix for multiple properties
 			expectedName := fixName(someName) + "-" + fmt.Sprintf("%d", i)
