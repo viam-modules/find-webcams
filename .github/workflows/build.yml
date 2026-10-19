@@ -1,36 +1,61 @@
 name: Build Test
 
 on:
-  # gated by the 'safe to test' label (see pr-labeler.yml)
-  pull_request_target:
-    types: [ labeled ]
+  pull_request:
   push:
     branches:
       - main
 
 jobs:
+  # Native builds need no secrets, so they run on plain pull_request and work for fork PRs.
+  # The cloud build can't: it clones meta.json's url and can't see a fork's commits.
   build:
-    if: github.event_name == 'push' || (github.event.label.name == 'safe to test' && contains(github.event.pull_request.labels.*.name, 'safe to test'))
+    name: build (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+          - platform: darwin/arm64
+            runner: macos-latest
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Refresh apt index
+        if: runner.os == 'Linux'
+        run: sudo apt-get update
+
+      - name: Set up
+        run: make setup
+
+      - name: Build module
+        run: make module.tar.gz
+
+      - name: Test
+        run: go test -tags nomicrophone ./...
+
+  build-windows:
+    uses: ./.github/workflows/build-and-upload-windows.yml
+    with:
+      ref: ${{ github.sha }}
+
+  # Exercises the registry's cloud build after merge; needs Viam secrets, so push only.
+  cloud-build:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          # safe: gated by the 'safe to test' label (pr-labeler.yml)
-          allow-unsafe-pr-checkout: true
       - uses: viamrobotics/build-action@v1.4
         with:
           version: ""  # Empty = build only, no deploy
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.sha }}
           key-id: ${{ secrets.VIAM_DEV_API_KEY_ID }}
           key-value: ${{ secrets.VIAM_DEV_API_KEY }}
-          # don't rewrite registry metadata from PRs
-          skip-update: ${{ github.event_name == 'pull_request_target' && 'true' || '' }}
-
-  build-windows:
-    if: github.event_name == 'push' || (github.event.label.name == 'safe to test' && contains(github.event.pull_request.labels.*.name, 'safe to test'))
-    uses: ./.github/workflows/build-and-upload-windows.yml
-    with:
-      repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
-      ref: ${{ github.event.pull_request.head.sha || github.sha }}

@@ -7,10 +7,6 @@ on:
       ref:
         required: true
         type: string
-      repository:
-        required: false
-        type: string
-        default: ''
       artifact-name:
         required: false
         type: string
@@ -26,10 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: ${{ inputs.repository || github.repository }}
           ref: ${{ inputs.ref }}
-          # safe: gated by the 'safe to test' label (pr-labeler.yml)
-          allow-unsafe-pr-checkout: true
 
       - name: Build Windows module
         uses: ./.github/actions/build-windows
