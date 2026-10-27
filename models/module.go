@@ -177,7 +177,7 @@ func findCameras(ctx context.Context, getDrivers func() []driver.Driver, logger 
 
 		// Create a webcam resource config for every property option
 		for j, p := range cam.props {
-			logger.Debugf("property %d: %dx%d @ %dfps, format: %s",
+			logger.Debugf("property %d: %dx%d @ %vfps, format: %s",
 				j, p.Video.Width, p.Video.Height, p.Video.FrameRate, p.Video.FrameFormat)
 			var result map[string]interface{}
 			attributes := videosource.WebcamConfig{

@@ -20,7 +20,7 @@ Each discovered camera is returned as a `camera` component config with the stand
 
 ## Windows support
 
-Discovered webcams use the built-in `rdk:builtin:webcam` model on every platform. On Windows, that model requires **viam-server v1.11.0 or later**; older versions of viam-server cannot run the configurations this module returns on Windows. If you previously used the `viam-labs:modular-webcam` module or the `windows-webcam` fragment, upgrade viam-server and switch your camera components to `rdk:builtin:webcam`.
+Discovered webcams use the built-in `rdk:builtin:webcam` model on every platform. On Windows, that model requires **viam-server v1.11.0 or later**; older versions of viam-server cannot run the configurations this module returns on Windows. MJPEG configurations on Windows require **viam-server v1.14.0 or later**. If you previously used the `viam-labs:modular-webcam` module or the `windows-webcam` fragment, upgrade viam-server and switch your camera components to `rdk:builtin:webcam`.
 
 ## Example config
 
